@@ -10,10 +10,12 @@ import {
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { ellipse, square, triangle } from 'ionicons/icons';
-import Tab1 from './pages/Tab1';
-import Tab2 from './pages/Tab2';
-import Tab3 from './pages/Tab3';
+import { calculator, thermometer, newspaper, star, search, fileTray } from 'ionicons/icons';
+import Multas from './pages/Multas';
+import Consultas from './pages/Consultas';
+import Tarifario from './pages/Tarifario';
+import Noticias from './pages/Noticias';
+import Clima from './pages/Clima';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -40,32 +42,53 @@ const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
       <IonTabs>
-        <IonRouterOutlet>
-          <Route exact path="/tab1">
-            <Tab1 />
+        <IonRouterOutlet placeholder="">
+          <Route exact path="/multas">
+            <Multas />
           </Route>
-          <Route exact path="/tab2">
-            <Tab2 />
+          <Route exact path="/consultas">
+            <Consultas />
           </Route>
-          <Route path="/tab3">
-            <Tab3 />
+          <Route exact path="/tarifario">
+            <Tarifario />
+          </Route>
+          <Route exact path="/noticias">
+            <Noticias />
+          </Route>
+          <Route exact path="/clima">
+            <Clima />
+          </Route>
+          <Route exact path="/horoscopo">
+            <Consultas />
           </Route>
           <Route exact path="/">
-            <Redirect to="/tab1" />
+            <Redirect to="/multas" />
           </Route>
         </IonRouterOutlet>
         <IonTabBar slot="bottom">
-          <IonTabButton tab="tab1" href="/tab1">
-            <IonIcon aria-hidden="true" icon={triangle} />
-            <IonLabel>Tab 1</IonLabel>
+          <IonTabButton tab="multas" href="/multas">
+            <IonIcon aria-hidden="true" icon={fileTray} />
+            <IonLabel>Multas</IonLabel>
           </IonTabButton>
-          <IonTabButton tab="tab2" href="/tab2">
-            <IonIcon aria-hidden="true" icon={ellipse} />
-            <IonLabel>Tab 2</IonLabel>
+          <IonTabButton tab="consultas" href="/consultas">
+            <IonIcon aria-hidden="true" icon={search} />
+            <IonLabel>Consulta</IonLabel>
           </IonTabButton>
-          <IonTabButton tab="tab3" href="/tab3">
-            <IonIcon aria-hidden="true" icon={square} />
-            <IonLabel>Tab 3</IonLabel>
+          <IonTabButton tab="tarifario" href="/tarifario">
+            <IonIcon aria-hidden="true" icon={calculator} />
+            <IonLabel>Tarifario</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="noticias" href="/noticias">
+            <IonIcon aria-hidden="true" icon={newspaper} />
+            <IonLabel>Noticias</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="clima" href="/clima">
+            <IonIcon aria-hidden="true" icon={thermometer} />
+            <IonLabel>Clima</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="horoscopo" href="/horoscopo">
+            <IonIcon aria-hidden="true" icon={star} />
+            <IonLabel>Horóscopo</IonLabel>
           </IonTabButton>
         </IonTabBar>
       </IonTabs>
