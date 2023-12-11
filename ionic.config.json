@@ -1,0 +1,7 @@
+{
+  "name": "multas-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
