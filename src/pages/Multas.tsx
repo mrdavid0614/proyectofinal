@@ -1,15 +1,28 @@
-import { IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonModal, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
 import { MapOptions, latLng, map, marker, tileLayer } from 'leaflet';
+import { add } from 'ionicons/icons';
 import { getFromDB } from '../services/storage';
 import { FINES_TABLE } from '../constants';
 import './Multas.css';
 import { Fine } from '../types/fine';
-import { add } from 'ionicons/icons';
 
 const Multas: React.FC = () => {
   const [fines, setFines] = useState<Fine[]>([]);
+  const [selectedFine, setSelectedFine] = useState<Fine | null>(null);
+  const [showCreateFineModal, setShowCreateFineModal] = useState(false);
   const mapRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    (async () => {
+      const fetchedFines = getFromDB(FINES_TABLE);
+      const parsedFines = JSON.parse(fetchedFines ?? '{}');
+
+      if (parsedFines instanceof Array) {
+        setFines(parsedFines);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const options: MapOptions = {
@@ -18,12 +31,7 @@ const Multas: React.FC = () => {
     };
     const mymap = map('map', options);
 
-    (async () => {
-      const fetchedFines = await getFromDB(FINES_TABLE);
-      const parsedFines = JSON.parse(fetchedFines ?? '{}');
-
-      if (parsedFines instanceof Array) {
-        tileLayer(`https://tile.openstreetmap.org/{z}/{x}/{y}.png`,{
+    tileLayer(`https://tile.openstreetmap.org/{z}/{x}/{y}.png`,{
           tileSize: 512,
           zoomOffset: -1,
           minZoom: 1,
@@ -39,14 +47,10 @@ const Multas: React.FC = () => {
           Motivo: ${fine.reason}Comentario: ${fine.comment}`);
         });
 
-        setFines(parsedFines);
-      }
-    })();
-
     return () => {
       mymap.remove();
     }
-  }, []);
+  }, [fines]);
 
   return (
     <IonPage>
@@ -54,7 +58,7 @@ const Multas: React.FC = () => {
         <IonToolbar>
           <IonTitle>Multas</IonTitle>
           <IonButtons slot='end'>
-            <IonButton>
+            <IonButton onClick={() => setShowCreateFineModal(true)}>
               <IonIcon icon={add} style={{ fontSize: 24 }} />
             </IonButton>
           </IonButtons>
@@ -72,7 +76,7 @@ const Multas: React.FC = () => {
               <IonButton onClick={() => mapRef.current?.scrollIntoView({ behavior: 'smooth' })}>Ver mapa</IonButton>
             </div>
           {fines.map((fine: Fine) => (
-            <IonCard key={fine.id}>
+            <IonCard key={fine.id} onClick={() => setSelectedFine(fine)}>
               <IonCardHeader>
                   <IonCardTitle>{fine.vehiclePlate}</IonCardTitle>
                   <IonCardSubtitle>{Intl.DateTimeFormat('es-do').format(new Date(fine.date))}</IonCardSubtitle>
@@ -90,6 +94,64 @@ const Multas: React.FC = () => {
 
         <section id='map' ref={mapRef}>
         </section>
+
+        <IonModal isOpen={!!selectedFine}>
+          <IonHeader>
+            <IonToolbar>
+              <IonTitle>Multa a {selectedFine?.vehiclePlate}</IonTitle>
+              <IonButtons slot="end">
+                <IonButton onClick={() => setSelectedFine(null)}>Cerrar</IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent className="ion-padding">
+            <p>
+              Cédula: {selectedFine?.id}
+            </p>
+
+            <p>
+              Fecha: {selectedFine && Intl.DateTimeFormat('es-do').format(new Date(selectedFine.date))}
+            </p>
+
+            <p>
+              Descripción: {selectedFine?.reason}
+            </p>
+
+            <p>
+              Ubicación: {selectedFine?.latitude},{selectedFine?.longitude}
+            </p>
+
+            <p>
+              Comentario: {selectedFine?.comment}
+            </p>
+
+            {selectedFine?.voiceNote && (
+              <p>
+                Audio: <audio src={selectedFine?.voiceNote}></audio>
+              </p>
+            )}
+
+            {selectedFine?.photo && (
+              <div>
+                <img src={selectedFine.photo} alt="Multa imagen" />
+              </div>
+            )}
+          </IonContent>
+        </IonModal>
+
+        <IonModal isOpen={showCreateFineModal}>
+          <IonHeader>
+            <IonToolbar>
+              <IonTitle>Crear multa</IonTitle>
+              <IonButtons slot="end">
+                <IonButton onClick={() => setShowCreateFineModal(false)}>Cerrar</IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonHeader>
+          <IonContent className="ion-padding">
+            
+          </IonContent>
+        </IonModal>
       </IonContent>
     </IonPage>
   );
