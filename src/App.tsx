@@ -35,6 +35,7 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import Horoscopo from './pages/Horoscopo';
 
 setupIonicReact();
 
@@ -59,7 +60,7 @@ const App: React.FC = () => (
             <Clima />
           </Route>
           <Route exact path="/horoscopo">
-            <Consultas />
+            <Horoscopo />
           </Route>
           <Route exact path="/">
             <Redirect to="/multas" />

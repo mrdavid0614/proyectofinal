@@ -1,9 +1,9 @@
-import { IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonModal, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonModal, IonPage, IonTextarea, IonTitle, IonToolbar } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
 import { MapOptions, latLng, map, marker, tileLayer } from 'leaflet';
-import { add } from 'ionicons/icons';
-import { getFromDB } from '../services/storage';
-import { FINES_TABLE } from '../constants';
+import { add, imageOutline } from 'ionicons/icons';
+import { getFromDB, saveToDB } from '../services/storage';
+import { FINES_TABLE, VEHICLES_TABLE } from '../constants';
 import './Multas.css';
 import { Fine } from '../types/fine';
 
@@ -12,6 +12,7 @@ const Multas: React.FC = () => {
   const [selectedFine, setSelectedFine] = useState<Fine | null>(null);
   const [showCreateFineModal, setShowCreateFineModal] = useState(false);
   const mapRef = useRef<HTMLElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -25,6 +26,9 @@ const Multas: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (fines.length)
+      saveToDB(FINES_TABLE, JSON.stringify(fines));
+
     const options: MapOptions = {
       center: latLng(19, -69.9312),
       zoom: 8,
@@ -51,6 +55,44 @@ const Multas: React.FC = () => {
       mymap.remove();
     }
   }, [fines]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const data = new FormData(event.target as HTMLFormElement);
+    let photoSrc = '';
+
+    if (data.has('photo')) {
+      const getPhotoSrc = async (): Promise<string> => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          resolve(reader.result as string);
+        }
+
+        reader.onerror = () => reject();
+
+        reader.readAsDataURL(data.get('photo') as File ?? new Blob());
+      });
+
+      photoSrc = await getPhotoSrc();
+    }
+
+    const newFine: Fine = {
+      id: data.get('id') as string ?? '',
+      vehiclePlate: data.get('vehiclePlate') as string ?? '',
+      reason: data.get('reason') as string ?? '',
+      comment: data.get('comment') as string ?? '',
+      latitude: parseFloat(data.get('latitude') as string ?? '0'),
+      longitude: parseFloat(data.get('longitude') as string ?? '0'),
+      date: data.get('date') as string ?? '',
+      photo: photoSrc,
+      voiceNote: ''
+    };
+
+    setFines((prevFines) => prevFines.concat(newFine));
+    setShowCreateFineModal(false);
+  }
 
   return (
     <IonPage>
@@ -149,7 +191,23 @@ const Multas: React.FC = () => {
             </IonToolbar>
           </IonHeader>
           <IonContent className="ion-padding">
-            
+            <form onSubmit={handleSubmit}>
+              <IonInput className="ion-margin-vertical" required name="id" label="Cédula" labelPlacement="floating" fill="outline" placeholder="000-0000000-0" />
+              <IonInput className="ion-margin-vertical" required name="vehiclePlate" label="Placa" labelPlacement="floating" fill="outline" placeholder="6423189" />
+              <IonTextarea className="ion-margin-vertical" required name="reason" label="Motivo" labelPlacement="floating" fill="outline" placeholder="Razón de la multa" />
+              <IonTextarea className="ion-margin-vertical" required name="comment" label="Comentario" labelPlacement="floating" fill="outline" placeholder="Comentario de la multa" />
+              <IonInput className="ion-margin-vertical" required name="latitude" label="Latitud" labelPlacement="floating" fill="outline" />
+              <IonInput className="ion-margin-vertical" required name="longitude" label="Longitud" labelPlacement="floating" fill="outline" />
+              <IonInput className="ion-margin-vertical" required name="date" label="Fecha" labelPlacement="floating" fill="outline" type="date" />
+              <input hidden accept="image/*;capture=camera" required name="photo" ref={fileInput} type="file" />
+              <IonButton className="ion-margin-vertical" expand="full" color="dark" onClick={() => fileInput.current?.click()}>
+                <IonIcon icon={imageOutline} />
+              </IonButton>
+              
+              <IonButton type="submit" expand="full">
+                Guardar
+              </IonButton>
+            </form>
           </IonContent>
         </IonModal>
       </IonContent>
